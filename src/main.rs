@@ -35,5 +35,5 @@ fn main() {
     println!("output words: {}", result.len());
     
     let j = serde_json::to_string(&result).unwrap();
-    std::fs::write("data/output/all_words.json", &j);
+    std::fs::write("data/output/all_words.json", &j).expect("Failed to write :(");
 }
