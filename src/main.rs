@@ -1,70 +1,39 @@
-use reqwest::Client;
-use std::fs::File;
-use std::collections::HashMap;
 use std::collections::HashSet;
-use serde::{Deserialize};
-use serde_json::{to_string};
-use std::io::prelude::*;
+use std::fs::File;
 
-#[derive(Deserialize, Debug)]
-struct PuzzleResponse {
-    answers: Answers,
-}
+fn main() {
+    
+    let nytimes = File::open("data/nytimes/all_words.json").unwrap();
+    let nytimes_words: Vec<String> = serde_json::from_reader::<File, Vec<String>>(nytimes).unwrap();
+    println!("nytimes words: {}", nytimes_words.len());
+    
+    let ukacd = File::open("data/UKACD17/all_words.json").unwrap();
+    let ukacd_words: Vec<String> = serde_json::from_reader::<File, Vec<String>>(ukacd).unwrap();
+    println!("ukacd words: {}", ukacd_words.len());
 
-#[derive(Deserialize, Debug)]
-struct Answers {
-    down: Vec<String>,
-    across: Vec<String>,
-}
+    let websters = File::open("data/websters/all_words.json").unwrap();
+    let websters_words: Vec<String> = serde_json::from_reader::<File, Vec<String>>(websters).unwrap();
+    println!("websters words: {}", websters_words.len());
 
-#[tokio::main]
-async fn main() {
-
-    let client = reqwest::Client::new();
-
-    let mut all_words: HashMap<String, usize>  = HashMap::new();
-
-    for year in 1977..2019 {
-        for month in 1..13 {
-            for day in 1..32 {
-                println!("Fetching {}-{}-{}", year, month, day);
-                match fetch_puzzle(&client, year, month, day).await {
-                    Ok(v) => {
-                        for word in v {
-                            let key = all_words.entry(word).or_insert(0);
-                            *key += 1;
-                        }
-                    },
-                    Err(e) =>             println!("Error fetching date {}-{}-{}: {:?}", year, month, day, e)
-                }
-            }
-        }
+    let mut result = HashSet::new();
+    
+    for word in nytimes_words {
+        result.insert(word);
     }
-
-    write_to_file(all_words);
-}
-
-fn write_to_file(all_words: HashMap<String, usize>) -> serde_json::Result<()> {
-    println!("{:?}", all_words.len());
-    let words: Vec<String> = all_words.keys().cloned().collect();
-    let j = serde_json::to_string(&words)?;
-    std::fs::write("data/nytimes/all_words.json", &j);
-    Ok(())
-}
-
-async fn fetch_puzzle(client: &Client, year: usize, month: usize, day: usize) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-
-    let url = format!("https://raw.githubusercontent.com/doshea/nyt_crosswords/master/{}/{:02}/{:02}.json", year, month, day);
-
-    let response = client.get(&url).send()
-        .await?
-        .json::<PuzzleResponse>()
-        .await?;
-
-
-    let mut result = response.answers.down.clone();
-
-    result.extend(response.answers.across);
-
-    Ok(result)
+    
+    for word in ukacd_words {
+        result.insert(word);
+    }
+    
+    for word in websters_words {
+        result.insert(word);
+    }
+    
+    let mut result: Vec<String> = result.drain().collect();
+    result.sort();
+    
+    println!("output words: {}", result.len());
+    
+    let j = serde_json::to_string(&result).unwrap();
+    std::fs::write("data/output/all_words.json", &j);
 }
