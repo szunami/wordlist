@@ -6,6 +6,16 @@ use serde::{Deserialize};
 use serde_json::{to_string};
 use std::io::prelude::*;
 
+#[derive(Deserialize, Debug)]
+struct PuzzleResponse {
+    answers: Answers,
+}
+
+#[derive(Deserialize, Debug)]
+struct Answers {
+    down: Vec<String>,
+    across: Vec<String>,
+}
 #[tokio::main]
 async fn main() {
     let client = reqwest::Client::new();
