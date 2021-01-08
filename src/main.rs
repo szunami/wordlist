@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::fs::File;
+use regex::Regex; 
 
 fn main() {
     
@@ -16,20 +17,25 @@ fn main() {
     println!("websters words: {}", websters_words.len());
 
     let mut result = HashSet::new();
+
     
     for word in nytimes_words {
         result.insert(word);
     }
     
-    for word in ukacd_words {
-        result.insert(word);
-    }
+    // for word in ukacd_words {
+    //     result.insert(word);
+    // }
     
-    for word in websters_words {
-        result.insert(word);
-    }
+    // for word in websters_words {
+    //     result.insert(word);
+    // }
     
-    let mut result: Vec<String> = result.drain().collect();
+    let regex = Regex::new(r"^[A-Z]+$").unwrap();
+
+    let mut result: Vec<String> = result.drain().filter(
+        |word| regex.is_match(word)
+    ).collect();
     result.sort();
     
     println!("output words: {}", result.len());
